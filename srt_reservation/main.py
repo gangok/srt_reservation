@@ -3,6 +3,7 @@ import os
 import time
 from random import randint
 from datetime import datetime
+from playsound import playsound
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.keys import Keys
@@ -14,11 +15,11 @@ from srt_reservation.exceptions import InvalidStationNameError, InvalidDateError
 from srt_reservation.validation import station_list
 
 # Chromedriver 없을 시 처음에는 자동으로 설치합니다.
-chromedriver_path = r'C:\workspace\chromedriver.exe'
+chromedriver_path = os.path.join(os.path.dirname(__file__), os.pardir, 'chrome_driver')
 
 
 class SRT:
-    def __init__(self, dpt_stn, arr_stn, dpt_dt, dpt_tm, num_trains_to_check=2, want_reserve=False):
+    def __init__(self, dpt_stn, arr_stn, dpt_dt, dpt_tm, num_trains_to_check=2, want_reserve=False, notify_sound_file_path=None):
         """
         :param dpt_stn: SRT 출발역
         :param arr_stn: SRT 도착역
@@ -26,6 +27,7 @@ class SRT:
         :param dpt_tm: 출발 시간 hh 형태, 반드시 짝수 ex) 06, 08, 14, ...
         :param num_trains_to_check: 검색 결과 중 예약 가능 여부 확인할 기차의 수 ex) 2일 경우 상위 2개 확인
         :param want_reserve: 예약 대기가 가능할 경우 선택 여부
+        :param notify_sound_file_path: 예약 완료시 재생할 음원 파일 경로
         """
         self.login_id = None
         self.login_psw = None
@@ -37,6 +39,7 @@ class SRT:
 
         self.num_trains_to_check = num_trains_to_check
         self.want_reserve = want_reserve
+        self.notify_sound_file_path = notify_sound_file_path
         self.driver = None
 
         self.is_booked = False  # 예약 완료 되었는지 확인용
@@ -121,6 +124,13 @@ class SRT:
         self.driver.implicitly_wait(5)
         time.sleep(1)
 
+    def after_success(self):
+        if self.notify_sound_file_path:
+            try:
+                playsound(self.notify_sound_file_path)
+            except Exception as err:
+                print(err)
+
     def refresh_search_result(self):
         while True:
             for i in range(1, self.num_trains_to_check+1):
@@ -147,6 +157,7 @@ class SRT:
                     if self.driver.find_elements(By.ID, 'isFalseGotoMain'):
                         is_booked = True
                         print("예약 성공")
+                        self.after_success()
                         return self.driver
                     else:
                         print("잔여석 없음. 다시 검색")

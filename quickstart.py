@@ -1,6 +1,7 @@
 """ Quickstart script for InstaPy usage """
 
 # imports
+import os
 from srt_reservation.main import SRT
 from srt_reservation.util import parse_cli_args
 
@@ -17,6 +18,7 @@ if __name__ == "__main__":
 
     num_trains_to_check = cli_args.num
     want_reserve = cli_args.reserve
+    notify_sound_file_path = os.path.join(os.path.dirname(__file__), 'mp3', '예약이준비되었습니다_papago.mp3')
 
-    srt = SRT(dpt_stn, arr_stn, dpt_dt, dpt_tm, num_trains_to_check, want_reserve)
+    srt = SRT(dpt_stn, arr_stn, dpt_dt, dpt_tm, num_trains_to_check, want_reserve, notify_sound_file_path)
     srt.run(login_id, login_psw)
