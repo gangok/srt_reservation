@@ -19,7 +19,7 @@ chromedriver_path = os.path.join(os.path.dirname(__file__), os.pardir, 'chrome_d
 
 
 class SRT:
-    def __init__(self, dpt_stn, arr_stn, dpt_dt, dpt_tm, num_trains_to_check=2, want_reserve=False, notify_sound_file_path=None):
+    def __init__(self, dpt_stn, arr_stn, dpt_dt, dpt_tm, num_trains_to_check=2, want_reserve=False, notify_sound_file_path=None, telegram_client=None):
         """
         :param dpt_stn: SRT 출발역
         :param arr_stn: SRT 도착역
@@ -28,6 +28,7 @@ class SRT:
         :param num_trains_to_check: 검색 결과 중 예약 가능 여부 확인할 기차의 수 ex) 2일 경우 상위 2개 확인
         :param want_reserve: 예약 대기가 가능할 경우 선택 여부
         :param notify_sound_file_path: 예약 완료시 재생할 음원 파일 경로
+        :param telegram_client: 예약 완료시 메세지 발송할 telegram client
         """
         self.login_id = None
         self.login_psw = None
@@ -40,6 +41,7 @@ class SRT:
         self.num_trains_to_check = num_trains_to_check
         self.want_reserve = want_reserve
         self.notify_sound_file_path = notify_sound_file_path
+        self.telegram_client = telegram_client
         self.driver = None
 
         self.is_booked = False  # 예약 완료 되었는지 확인용
@@ -128,6 +130,11 @@ class SRT:
         if self.notify_sound_file_path:
             try:
                 playsound(self.notify_sound_file_path)
+            except Exception as err:
+                print(err)
+        if self.telegram_client:
+            try:
+                self.telegram_client.send_message(f'예약완료!\n출발:{self.dpt_stn}\n도착:{self.arr_stn}\n날짜:{self.dpt_dt}\n시간:대략{self.dpt_tm}')
             except Exception as err:
                 print(err)
 

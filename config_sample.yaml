@@ -8,3 +8,6 @@ dpt_tm: 08
 num_trains_to_check: 3
 want_reserve : False
 notify_sound_file_path : 'mp3/예약이준비되었습니다_papago.mp3'
+
+telegram_token: xxxx
+telegram_chat_id: yyyy
