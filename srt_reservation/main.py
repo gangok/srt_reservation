@@ -19,7 +19,7 @@ chromedriver_path = os.path.join(os.path.dirname(__file__), os.pardir, 'chrome_d
 
 
 class SRT:
-    def __init__(self, dpt_stn, arr_stn, dpt_dt, dpt_tm, num_trains_to_check=2, want_reserve=False, notify_sound_file_path=None, telegram_client=None):
+    def __init__(self, dpt_stn, arr_stn, dpt_dt, dpt_tm, num_trains_to_check=2, want_reserve=False, notify_sound_file_path=None, telegram_client=None, num_passenger=None):
         """
         :param dpt_stn: SRT 출발역
         :param arr_stn: SRT 도착역
@@ -29,6 +29,7 @@ class SRT:
         :param want_reserve: 예약 대기가 가능할 경우 선택 여부
         :param notify_sound_file_path: 예약 완료시 재생할 음원 파일 경로
         :param telegram_client: 예약 완료시 메세지 발송할 telegram client
+        :param num_passenger: 성인 예약 인원
         """
         self.login_id = None
         self.login_psw = None
@@ -37,6 +38,7 @@ class SRT:
         self.arr_stn = arr_stn
         self.dpt_dt = dpt_dt
         self.dpt_tm = dpt_tm
+        self.num_passenger = num_passenger
 
         self.num_trains_to_check = num_trains_to_check
         self.want_reserve = want_reserve
@@ -116,6 +118,11 @@ class SRT:
         elm_dpt_tm = self.driver.find_element(By.ID, "dptTm")
         self.driver.execute_script("arguments[0].setAttribute('style','display: True;')", elm_dpt_tm)
         Select(self.driver.find_element(By.ID, "dptTm")).select_by_visible_text(self.dpt_tm)
+
+        # 인원 정보 입력
+        psg_info = self.driver.find_element(By.NAME, "psgInfoPerPrnb1")
+        self.driver.execute_script("arguments[0].setAttribute('style','display: True;')", psg_info)
+        Select(self.driver.find_element(By.NAME, "psgInfoPerPrnb1")).select_by_value(self.num_passenger)
 
         print("기차를 조회합니다")
         print(f"출발역:{self.dpt_stn} , 도착역:{self.arr_stn}\n날짜:{self.dpt_dt}, 시간: {self.dpt_tm}시 이후\n{self.num_trains_to_check}개의 기차 중 예약")
