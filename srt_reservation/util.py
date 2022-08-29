@@ -1,4 +1,5 @@
 import argparse
+import yaml
 
 def parse_cli_args():
 
@@ -14,6 +15,12 @@ def parse_cli_args():
     parser.add_argument("--num", help="no of trains to check", type=int, metavar="2", default=2)
     parser.add_argument("--reserve", help="Reserve or not", type=bool, metavar="2", default=False)
 
+    parser.add_argument("--config", help="Path for config file", type=str, metavar="config_sample.yml")
+
     args = parser.parse_args()
 
     return args
+
+def parse_yaml(yaml_path):
+    with open(yaml_path, 'r', encoding='utf8') as file:
+        return yaml.safe_load(file)

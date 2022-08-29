@@ -48,6 +48,13 @@ python quickstart.py --user 1234567890 --psw 000000 --dpt 동탄 --arr 동대구
 python quickstart.py --user 1234567890 --psw 000000 --dpt 동탄 --arr 동대구 --dt 20220117 --tm 08 --num 3 --reserve True
 ```
 
+**Optional**  
+config 파일 사용
+```cmd
+python quickstart.py --config config_sample.yaml
+```
+
+
 **실행 결과**
 
 ![](./img/img1.png)
