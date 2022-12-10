@@ -4,8 +4,10 @@ dpt_stn: 동탄
 arr_stn: 동대구
 dpt_dt: 22020117
 dpt_tm: 08
+num_passenger: 2
 
 num_trains_to_check: 3
+num_trains_to_ignore: 0
 want_reserve : False
 notify_sound_file_path : 'mp3/예약이준비되었습니다_papago.mp3'
 

@@ -19,13 +19,14 @@ chromedriver_path = os.path.join(os.path.dirname(__file__), os.pardir, 'chrome_d
 
 
 class SRT:
-    def __init__(self, dpt_stn, arr_stn, dpt_dt, dpt_tm, num_trains_to_check=2, want_reserve=False, notify_sound_file_path=None, telegram_client=None, num_passenger=None):
+    def __init__(self, dpt_stn, arr_stn, dpt_dt, dpt_tm, num_trains_to_check=2, num_trains_to_ignore=0, want_reserve=False, notify_sound_file_path=None, telegram_client=None, num_passenger=None):
         """
         :param dpt_stn: SRT 출발역
         :param arr_stn: SRT 도착역
         :param dpt_dt: 출발 날짜 YYYYMMDD 형태 ex) 20220115
         :param dpt_tm: 출발 시간 hh 형태, 반드시 짝수 ex) 06, 08, 14, ...
         :param num_trains_to_check: 검색 결과 중 예약 가능 여부 확인할 기차의 수 ex) 2일 경우 상위 2개 확인
+        :param num_trains_to_ignore: 검색 결과 중 예약 가능 여부 무시할 기차의 수 ex) 2일 경우 상위 2개 무시
         :param want_reserve: 예약 대기가 가능할 경우 선택 여부
         :param notify_sound_file_path: 예약 완료시 재생할 음원 파일 경로
         :param telegram_client: 예약 완료시 메세지 발송할 telegram client
@@ -41,6 +42,7 @@ class SRT:
         self.num_passenger = num_passenger
 
         self.num_trains_to_check = num_trains_to_check
+        self.num_trains_to_ignore = num_trains_to_ignore
         self.want_reserve = want_reserve
         self.notify_sound_file_path = notify_sound_file_path
         self.telegram_client = telegram_client
@@ -125,7 +127,7 @@ class SRT:
         Select(self.driver.find_element(By.NAME, "psgInfoPerPrnb1")).select_by_value(self.num_passenger)
 
         print("기차를 조회합니다")
-        print(f"출발역:{self.dpt_stn} , 도착역:{self.arr_stn}\n날짜:{self.dpt_dt}, 시간: {self.dpt_tm}시 이후\n{self.num_trains_to_check}개의 기차 중 예약")
+        print(f"출발역:{self.dpt_stn} , 도착역:{self.arr_stn}\n날짜:{self.dpt_dt}, 시간: {self.dpt_tm}시 이후\n{self.num_trains_to_ignore} ~ {self.num_trains_to_check}개의 기차 중 예약")
         print(f"예약 대기 사용: {self.want_reserve}")
 
         # 조회하기 버튼 클릭
@@ -147,7 +149,7 @@ class SRT:
 
     def refresh_search_result(self):
         while True:
-            for i in range(1, self.num_trains_to_check+1):
+            for i in range(1 + self.num_trains_to_ignore, self.num_trains_to_check + 1):
                 try:
                     standard_seat = self.driver.find_element(By.CSS_SELECTOR, f"#result-form > fieldset > div.tbl_wrap.th_thead > table > tbody > tr:nth-child({i}) > td:nth-child(7)").text
                     reservation = self.driver.find_element(By.CSS_SELECTOR, f"#result-form > fieldset > div.tbl_wrap.th_thead > table > tbody > tr:nth-child({i}) > td:nth-child(8)").text
