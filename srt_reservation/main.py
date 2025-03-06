@@ -70,10 +70,8 @@ class SRT:
         self.login_psw = login_psw
 
     def run_driver(self):
-        try:
-            self.driver = webdriver.Chrome(executable_path=chromedriver_path)
-        except WebDriverException:
-            self.driver = webdriver.Chrome(ChromeDriverManager().install())
+        ChromeDriverManager().install()
+        self.driver = webdriver.Chrome()
 
 
     def login(self):
