@@ -5,6 +5,7 @@ arr_stn: 동대구
 dpt_dt: 22020117
 dpt_tm: 08
 num_passenger: 2
+num_children_passenger: 0
 
 num_trains_to_check: 3
 num_trains_to_ignore: 0
