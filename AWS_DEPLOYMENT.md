@@ -61,8 +61,14 @@ telegram_chat_id: YOUR_CHAT_ID
 # Test run
 python3 quickstart.py --config config.yaml
 
-# Run in background with nohup
-nohup python3 quickstart.py --config config.yaml > srt_log.txt 2>&1 &
+# Run in background with nohup (unbuffered output)
+nohup python3 -u quickstart.py --config config.yaml > srt_log.txt 2>&1 &
+
+# Monitor the log file (may need to wait for output due to buffering)
+tail -f srt_log.txt
+
+# Alternative: Use script command to force pseudo-terminal
+script -q -c "python3 quickstart.py --config config.yaml" srt_log.txt &
 
 # Or use screen to run in detached session
 screen -S srt_monitor

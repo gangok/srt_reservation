@@ -116,9 +116,9 @@ class SRT:
         self.driver.execute_script("arguments[0].setAttribute('style','display: True;')", psg_info)
         Select(self.driver.find_element(By.NAME, "psgInfoPerPrnb5")).select_by_value(self.num_children_passenger)
 
-        print("기차를 조회합니다")
-        print(f"출발역:{self.dpt_stn} , 도착역:{self.arr_stn}\n날짜:{self.dpt_dt}, 시간: {self.dpt_tm}시 이후\n{self.num_trains_to_ignore} ~ {self.num_trains_to_check}개의 기차 중 예약")
-        print(f"예약 대기 사용: {self.want_reserve}")
+        print("기차를 조회합니다", flush=True)
+        print(f"출발역:{self.dpt_stn} , 도착역:{self.arr_stn}\n날짜:{self.dpt_dt}, 시간: {self.dpt_tm}시 이후\n{self.num_trains_to_ignore} ~ {self.num_trains_to_check}개의 기차 중 예약", flush=True)
+        print(f"예약 대기 사용: {self.want_reserve}", flush=True)
 
         # 조회하기 버튼 클릭
         self.driver.find_element(By.XPATH, "//input[@value='조회하기']").click()
@@ -126,14 +126,14 @@ class SRT:
         time.sleep(1)
 
     def after_ticket_found(self):
-        print("티켓 예약 가능!")
+        print("티켓 예약 가능!", flush=True)
         if self.telegram_client:
             try:
                 self.telegram_client.send_message(f'티켓 예약 가능!\n출발:{self.dpt_stn}\n도착:{self.arr_stn}\n날짜:{self.dpt_dt}\n시간:대략{self.dpt_tm}시')
             except Exception as err:
-                print(f"Telegram 메시지 전송 실패: {err}")
+                print(f"Telegram 메시지 전송 실패: {err}", flush=True)
         else:
-            print("Telegram 클라이언트가 설정되지 않았습니다.")
+            print("Telegram 클라이언트가 설정되지 않았습니다.", flush=True)
 
     def refresh_search_result(self):
         while True:
@@ -146,14 +146,14 @@ class SRT:
                     reservation = "매진"
 
                 if "예약하기" in standard_seat:
-                    print("예약 가능한 티켓 발견!")
+                    print("예약 가능한 티켓 발견!", flush=True)
                     self.is_booked = True
                     self.after_ticket_found()
                     return self.driver
 
                 if self.want_reserve:
                     if "신청하기" in reservation:
-                        print("예약 대기 가능한 티켓 발견!")
+                        print("예약 대기 가능한 티켓 발견!", flush=True)
                         self.is_booked = True
                         self.after_ticket_found()
                         return self.driver
@@ -165,7 +165,7 @@ class SRT:
                 submit = self.driver.find_element(By.XPATH, "//input[@value='조회하기']")
                 self.driver.execute_script("arguments[0].click();", submit)
                 self.cnt_refresh += 1
-                print(f"새로고침 {self.cnt_refresh}회")
+                print(f"새로고침 {self.cnt_refresh}회", flush=True)
                 self.driver.implicitly_wait(10)
                 time.sleep(0.5)
             else:
