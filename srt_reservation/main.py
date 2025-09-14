@@ -3,7 +3,6 @@ import os
 import time
 from random import randint
 from datetime import datetime
-from playsound import playsound
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.keys import Keys
@@ -29,12 +28,10 @@ class SRT:
         :param num_trains_to_ignore: 검색 결과 중 예약 가능 여부 무시할 기차의 수 ex) 2일 경우 상위 2개 무시
         :param want_reserve: 예약 대기가 가능할 경우 선택 여부
         :param notify_sound_file_path: 예약 완료시 재생할 음원 파일 경로
-        :param telegram_client: 예약 완료시 메세지 발송할 telegram client
+        :param telegram_client: 티켓 가능시 메세지 발송할 telegram client
         :param num_passenger: 성인 예약 인원
         :param num_children_passenger: 어린이 예약 인원
         """
-        self.login_id = None
-        self.login_psw = None
 
         self.dpt_stn = dpt_stn
         self.arr_stn = arr_stn
@@ -67,32 +64,22 @@ class SRT:
         except ValueError:
             raise InvalidDateError("날짜가 잘못 되었습니다. YYYYMMDD 형식으로 입력해주세요.")
 
-    def set_log_info(self, login_id, login_psw):
-        self.login_id = login_id
-        self.login_psw = login_psw
 
     def run_driver(self):
         ChromeDriverManager().install()
-        self.driver = webdriver.Chrome()
+
+        # Configure Chrome options for AWS Linux environment
+        chrome_options = webdriver.ChromeOptions()
+        chrome_options.add_argument('--headless')
+        chrome_options.add_argument('--no-sandbox')
+        chrome_options.add_argument('--disable-dev-shm-usage')
+        chrome_options.add_argument('--disable-gpu')
+        chrome_options.add_argument('--window-size=1920,1080')
+
+        self.driver = webdriver.Chrome(options=chrome_options)
 
 
-    def login(self):
-        self.driver.get('https://etk.srail.co.kr/cmc/01/selectLoginForm.do')
 
-        self.driver.implicitly_wait(15)
-        self.driver.find_element(By.ID, 'srchDvNm01').send_keys(str(self.login_id))
-        self.driver.find_element(By.ID, 'hmpgPwdCphd01').send_keys(str(self.login_psw))
-        self.driver.find_element(By.XPATH, '//*[@id="login-form"]/fieldset/div[1]/div[2]/div[2]/div/div[2]/input').click()
-
-        self.driver.implicitly_wait(5)
-        return self.driver
-
-    def check_login(self):
-        menu_text = self.driver.find_element(By.CSS_SELECTOR, "#wrap > div.header.header-e > div.global.clear > div").text
-        if "환영합니다" in menu_text:
-            return True
-        else:
-            return False
 
 
 
@@ -140,17 +127,15 @@ class SRT:
         self.driver.implicitly_wait(5)
         time.sleep(1)
 
-    def after_success(self):
-        if self.notify_sound_file_path:
-            try:
-                playsound(self.notify_sound_file_path)
-            except Exception as err:
-                print(err)
+    def after_ticket_found(self):
+        print("티켓 예약 가능!")
         if self.telegram_client:
             try:
-                self.telegram_client.send_message(f'예약완료!\n출발:{self.dpt_stn}\n도착:{self.arr_stn}\n날짜:{self.dpt_dt}\n시간:대략{self.dpt_tm}')
+                self.telegram_client.send_message(f'티켓 예약 가능!\n출발:{self.dpt_stn}\n도착:{self.arr_stn}\n날짜:{self.dpt_dt}\n시간:대략{self.dpt_tm}시')
             except Exception as err:
-                print(err)
+                print(f"Telegram 메시지 전송 실패: {err}")
+        else:
+            print("Telegram 클라이언트가 설정되지 않았습니다.")
 
     def refresh_search_result(self):
         while True:
@@ -163,33 +148,16 @@ class SRT:
                     reservation = "매진"
 
                 if "예약하기" in standard_seat:
-                    print("예약 가능 클릭")
-
-                    # Error handling in case that click does not work
-                    try:
-                        self.driver.find_element(By.CSS_SELECTOR, f"#result-form > fieldset > div.tbl_wrap.th_thead > table > tbody > tr:nth-child({i}) > td:nth-child(7) > a").click()
-                    except ElementClickInterceptedException as err:
-                        print(err)
-                        self.driver.find_element(By.CSS_SELECTOR, f"#result-form > fieldset > div.tbl_wrap.th_thead > table > tbody > tr:nth-child({i}) > td:nth-child(7) > a").send_keys(Keys.ENTER)
-                    finally:
-                        self.driver.implicitly_wait(3)
-
-                    # 예약이 성공하면
-                    if self.driver.find_elements(By.ID, 'isFalseGotoMain'):
-                        is_booked = True
-                        print("예약 성공")
-                        self.after_success()
-                        return self.driver
-                    else:
-                        print("잔여석 없음. 다시 검색")
-                        self.driver.back()  # 뒤로가기
-                        self.driver.implicitly_wait(5)
+                    print("예약 가능한 티켓 발견!")
+                    self.is_booked = True
+                    self.after_ticket_found()
+                    return self.driver
 
                 if self.want_reserve:
                     if "신청하기" in reservation:
-                        print("예약 대기 완료")
-                        self.driver.find_element(By.CSS_SELECTOR, f"#result-form > fieldset > div.tbl_wrap.th_thead > table > tbody > tr:nth-child({i}) > td:nth-child(8) > a").click()
-                        is_booked = True
+                        print("예약 대기 가능한 티켓 발견!")
+                        self.is_booked = True
+                        self.after_ticket_found()
                         return self.driver
 
             if not self.is_booked:
@@ -205,10 +173,8 @@ class SRT:
             else:
                 return self.driver
 
-    def run(self, login_id, login_psw):
+    def run(self):
         self.run_driver()
-        self.set_log_info(login_id, login_psw)
-        self.login()
         self.go_search()
         self.refresh_search_result()
 
