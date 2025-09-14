@@ -129,3 +129,10 @@ sudo mkswap /swapfile
 sudo swapon /swapfile
 echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 ```
+
+### Browser Crash Recovery
+The application now includes automatic browser restart functionality:
+- Detects Chrome session crashes (InvalidSessionIdException)
+- Automatically restarts the browser and continues monitoring
+- Adds memory optimization flags to Chrome for better stability
+- Logs all recovery attempts to help with troubleshooting

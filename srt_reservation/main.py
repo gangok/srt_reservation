@@ -8,7 +8,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.select import Select
-from selenium.common.exceptions import ElementClickInterceptedException, StaleElementReferenceException, WebDriverException
+from selenium.common.exceptions import ElementClickInterceptedException, StaleElementReferenceException, WebDriverException, InvalidSessionIdException, NoSuchElementException
 
 from srt_reservation.exceptions import InvalidStationNameError, InvalidDateError, InvalidDateFormatError, InvalidTimeFormatError
 from srt_reservation.validation import station_list
@@ -73,6 +73,10 @@ class SRT:
         chrome_options.add_argument('--disable-dev-shm-usage')
         chrome_options.add_argument('--disable-gpu')
         chrome_options.add_argument('--window-size=1920,1080')
+        chrome_options.add_argument('--memory-pressure-off')
+        chrome_options.add_argument('--disable-background-timer-throttling')
+        chrome_options.add_argument('--disable-renderer-backgrounding')
+        chrome_options.add_argument('--disable-backgrounding-occluded-windows')
 
         self.driver = webdriver.Chrome(options=chrome_options)
 
@@ -135,13 +139,31 @@ class SRT:
         else:
             print("Telegram 클라이언트가 설정되지 않았습니다.", flush=True)
 
+    def restart_driver(self):
+        """브라우저 세션이 끊어졌을 때 드라이버 재시작"""
+        print("브라우저 세션이 끊어졌습니다. 재시작합니다...", flush=True)
+        try:
+            if self.driver:
+                self.driver.quit()
+        except:
+            pass
+
+        time.sleep(3)
+        self.run_driver()
+        self.go_search()
+        print("브라우저가 재시작되었습니다.", flush=True)
+
     def refresh_search_result(self):
         while True:
             for i in range(1 + self.num_trains_to_ignore, self.num_trains_to_check + 1):
                 try:
                     standard_seat = self.driver.find_element(By.CSS_SELECTOR, f"#result-form > fieldset > div.tbl_wrap.th_thead > table > tbody > tr:nth-child({i}) > td:nth-child(7)").text
                     reservation = self.driver.find_element(By.CSS_SELECTOR, f"#result-form > fieldset > div.tbl_wrap.th_thead > table > tbody > tr:nth-child({i}) > td:nth-child(8)").text
-                except StaleElementReferenceException:
+                except (StaleElementReferenceException, InvalidSessionIdException, WebDriverException, NoSuchElementException) as e:
+                    if isinstance(e, (InvalidSessionIdException, WebDriverException)):
+                        print(f"브라우저 오류 발생: {e}", flush=True)
+                        self.restart_driver()
+                        return self.refresh_search_result()
                     standard_seat = "매진"
                     reservation = "매진"
 
@@ -161,13 +183,18 @@ class SRT:
             if not self.is_booked:
                 time.sleep(randint(2, 4))  # 2~4초 랜덤으로 기다리기
 
-                # 다시 조회하기
-                submit = self.driver.find_element(By.XPATH, "//input[@value='조회하기']")
-                self.driver.execute_script("arguments[0].click();", submit)
-                self.cnt_refresh += 1
-                print(f"새로고침 {self.cnt_refresh}회", flush=True)
-                self.driver.implicitly_wait(10)
-                time.sleep(0.5)
+                try:
+                    # 다시 조회하기
+                    submit = self.driver.find_element(By.XPATH, "//input[@value='조회하기']")
+                    self.driver.execute_script("arguments[0].click();", submit)
+                    self.cnt_refresh += 1
+                    print(f"새로고침 {self.cnt_refresh}회", flush=True)
+                    self.driver.implicitly_wait(10)
+                    time.sleep(0.5)
+                except (InvalidSessionIdException, WebDriverException) as e:
+                    print(f"새로고침 중 브라우저 오류: {e}", flush=True)
+                    self.restart_driver()
+                    continue
             else:
                 return self.driver
 
