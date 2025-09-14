@@ -22,7 +22,6 @@ if __name__ == "__main__":
         num_trains_to_check = int(config['num_trains_to_check'])
         num_trains_to_ignore = int(config['num_trains_to_ignore'])
         want_reserve = bool(config['want_reserve'])
-        notify_sound_file_path = config['notify_sound_file_path']
 
         telegram_token = config['telegram_token']
         telegram_chat_id = config['telegram_chat_id']
@@ -39,8 +38,7 @@ if __name__ == "__main__":
         num_trains_to_check = cli_args.num
         num_trains_to_ignore = 0
         want_reserve = cli_args.reserve
-        notify_sound_file_path = os.path.join(os.path.dirname(__file__), 'mp3', '예약이준비되었습니다_papago.mp3')
         telegram_client = None
 
-    srt = SRT(dpt_stn, arr_stn, dpt_dt, dpt_tm, num_trains_to_check, num_trains_to_ignore, want_reserve, notify_sound_file_path, telegram_client, num_passenger, num_children_passenger)
+    srt = SRT(dpt_stn, arr_stn, dpt_dt, dpt_tm, num_trains_to_check, num_trains_to_ignore, want_reserve, telegram_client, num_passenger, num_children_passenger)
     srt.run()

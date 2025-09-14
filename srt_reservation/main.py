@@ -18,7 +18,7 @@ chromedriver_path = os.path.join(os.path.dirname(__file__), os.pardir, 'chrome_d
 
 
 class SRT:
-    def __init__(self, dpt_stn, arr_stn, dpt_dt, dpt_tm, num_trains_to_check=2, num_trains_to_ignore=0, want_reserve=False, notify_sound_file_path=None, telegram_client=None, num_passenger=None, num_children_passenger=None):
+    def __init__(self, dpt_stn, arr_stn, dpt_dt, dpt_tm, num_trains_to_check=2, num_trains_to_ignore=0, want_reserve=False, telegram_client=None, num_passenger=None, num_children_passenger=None):
         """
         :param dpt_stn: SRT 출발역
         :param arr_stn: SRT 도착역
@@ -27,7 +27,6 @@ class SRT:
         :param num_trains_to_check: 검색 결과 중 예약 가능 여부 확인할 기차의 수 ex) 2일 경우 상위 2개 확인
         :param num_trains_to_ignore: 검색 결과 중 예약 가능 여부 무시할 기차의 수 ex) 2일 경우 상위 2개 무시
         :param want_reserve: 예약 대기가 가능할 경우 선택 여부
-        :param notify_sound_file_path: 예약 완료시 재생할 음원 파일 경로
         :param telegram_client: 티켓 가능시 메세지 발송할 telegram client
         :param num_passenger: 성인 예약 인원
         :param num_children_passenger: 어린이 예약 인원
@@ -43,7 +42,6 @@ class SRT:
         self.num_trains_to_check = num_trains_to_check
         self.num_trains_to_ignore = num_trains_to_ignore
         self.want_reserve = want_reserve
-        self.notify_sound_file_path = notify_sound_file_path
         self.telegram_client = telegram_client
         self.driver = None
 

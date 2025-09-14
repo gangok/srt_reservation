@@ -28,7 +28,8 @@ sudo apt install python3 python3-pip wget unzip -y
 ### 3. Install Google Chrome
 ```bash
 # For Amazon Linux 2
-sudo yum install -y google-chrome-stable
+wget https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
+sudo yum localinstall -y google-chrome-stable_current_x86_64.rpm
 
 # For Ubuntu
 wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
@@ -91,7 +92,34 @@ python3 quickstart.py --config config.yaml
 
 ## Troubleshooting
 
+### Chrome Installation Issues (Amazon Linux 2)
+```bash
+# If Chrome installation fails, try installing dependencies first:
+sudo yum install -y liberation-fonts
+sudo yum install -y vulkan
+
+# Alternative Chrome installation method:
+curl -O https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
+sudo rpm -ivh google-chrome-stable_current_x86_64.rpm --force --nodeps
+
+# If still having issues, install Chromium instead:
+sudo amazon-linux-extras install -y chromium
+# Then modify the code to use chromium instead of chrome
+```
+
+### General Issues
 - If Chrome crashes, increase EC2 instance memory (at least t3.small recommended)
-- Check Chrome installation: `google-chrome --version`
-- Verify network connectivity to SRT website
+- Check Chrome installation: `google-chrome --version` or `/usr/bin/google-chrome --version`
+- Verify network connectivity to SRT website: `curl -I https://etk.srail.kr`
 - Monitor system resources: `htop` or `top`
+- Check available disk space: `df -h`
+
+### Memory Issues
+```bash
+# Add swap if running out of memory
+sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+```
